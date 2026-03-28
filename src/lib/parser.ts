@@ -24,11 +24,17 @@ export function parseAndValidateJSON(input: string): ParseResult {
   }
 
   const record = parsed as Record<string, unknown>;
+  const dangerousKeys = new Set(["__proto__", "constructor", "prototype"]);
   const result: Record<string, unknown[]> = {};
 
   for (const key of Object.keys(record)) {
+    if (dangerousKeys.has(key)) continue;
     const value = record[key];
     result[key] = Array.isArray(value) ? value : [value];
+  }
+
+  if (Object.keys(result).length === 0) {
+    return { success: false, error: "No valid keys after filtering" };
   }
 
   return { success: true, data: result };
