@@ -1,28 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import CopyButton from "./CopyButton";
 
 interface ResultDisplayProps {
   id: string;
   endpoints: string[];
   baseUrl: string;
-}
-
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-  return (
-    <button
-      onClick={handleCopy}
-      className="ml-2 shrink-0 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 hover:bg-gray-600 transition-colors"
-    >
-      {copied ? "Copied!" : label}
-    </button>
-  );
 }
 
 const METHODS = ["GET", "POST", "PUT", "DELETE"] as const;
@@ -69,6 +53,13 @@ export default function ResultDisplay({ id, endpoints, baseUrl }: ResultDisplayP
           );
         })}
       </div>
+
+      <Link
+        href={`/docs/${id}`}
+        className="mt-4 inline-block text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+      >
+        View API Docs &rarr;
+      </Link>
     </div>
   );
 }
