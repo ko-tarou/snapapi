@@ -1,5 +1,6 @@
 import { getEndpoint, updateEndpointData } from "@/lib/db";
 import { corsHeaders } from "@/lib/cors";
+import { isPlainObject } from "@/lib/validate";
 
 type Params = { id: string; resource: string };
 
@@ -17,7 +18,15 @@ export async function GET(
     );
   }
 
-  const data = JSON.parse(endpoint.data) as Record<string, unknown[]>;
+  let data: Record<string, unknown[]>;
+  try {
+    data = JSON.parse(endpoint.data) as Record<string, unknown[]>;
+  } catch {
+    return Response.json(
+      { error: "Corrupted endpoint data" },
+      { status: 500, headers: corsHeaders() }
+    );
+  }
 
   if (!(resource in data)) {
     return Response.json(
@@ -43,7 +52,15 @@ export async function POST(
     );
   }
 
-  const data = JSON.parse(endpoint.data) as Record<string, unknown[]>;
+  let data: Record<string, unknown[]>;
+  try {
+    data = JSON.parse(endpoint.data) as Record<string, unknown[]>;
+  } catch {
+    return Response.json(
+      { error: "Corrupted endpoint data" },
+      { status: 500, headers: corsHeaders() }
+    );
+  }
 
   if (!(resource in data)) {
     return Response.json(
@@ -62,14 +79,31 @@ export async function POST(
     );
   }
 
-  const items = data[resource];
-  const maxId = items.reduce((max: number, item: unknown) => {
-    const itemObj = item as Record<string, unknown>;
-    const itemId = typeof itemObj.id === "number" ? itemObj.id : 0;
-    return Math.max(max, itemId);
-  }, 0);
+  if (!isPlainObject(body)) {
+    return Response.json(
+      { error: "Request body must be a JSON object" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
 
-  const newItem = { ...(body as Record<string, unknown>), id: maxId + 1 };
+  const items = data[resource];
+  const hasNumericIds = items.some((item: unknown) => {
+    const obj = item as Record<string, unknown>;
+    return typeof obj.id === "number";
+  });
+
+  let newId: number;
+  if (hasNumericIds) {
+    const maxId = items.reduce((max: number, item: unknown) => {
+      const obj = item as Record<string, unknown>;
+      return typeof obj.id === "number" ? Math.max(max, obj.id) : max;
+    }, 0);
+    newId = maxId + 1;
+  } else {
+    newId = items.length + 1;
+  }
+
+  const newItem = { ...body, id: newId };
   items.push(newItem);
   updateEndpointData(id, JSON.stringify(data));
 
