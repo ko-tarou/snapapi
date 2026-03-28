@@ -1,5 +1,22 @@
 import { getEndpoint, updateEndpointData } from "@/lib/db";
 import { corsHeaders } from "@/lib/cors";
+import { isPlainObject } from "@/lib/validate";
+
+function findItemIndex(items: unknown[], itemId: string): number {
+  const numericId = Number(itemId);
+  return items.findIndex((i: unknown) => {
+    const obj = i as Record<string, unknown>;
+    return obj.id === numericId || String(obj.id) === itemId;
+  });
+}
+
+function parseEndpointData(raw: string): Record<string, unknown[]> | null {
+  try {
+    return JSON.parse(raw) as Record<string, unknown[]>;
+  } catch {
+    return null;
+  }
+}
 
 type Params = { id: string; resource: string; itemId: string };
 
@@ -17,7 +34,13 @@ export async function GET(
     );
   }
 
-  const data = JSON.parse(endpoint.data) as Record<string, unknown[]>;
+  const data = parseEndpointData(endpoint.data);
+  if (!data) {
+    return Response.json(
+      { error: "Corrupted endpoint data" },
+      { status: 500, headers: corsHeaders() }
+    );
+  }
 
   if (!(resource in data)) {
     return Response.json(
@@ -26,20 +49,15 @@ export async function GET(
     );
   }
 
-  const numericId = Number(itemId);
-  const item = data[resource].find((i: unknown) => {
-    const obj = i as Record<string, unknown>;
-    return obj.id === numericId;
-  });
-
-  if (!item) {
+  const index = findItemIndex(data[resource], itemId);
+  if (index === -1) {
     return Response.json(
       { error: "Item not found" },
       { status: 404, headers: corsHeaders() }
     );
   }
 
-  return Response.json(item, { headers: corsHeaders() });
+  return Response.json(data[resource][index], { headers: corsHeaders() });
 }
 
 export async function PUT(
@@ -56,7 +74,13 @@ export async function PUT(
     );
   }
 
-  const data = JSON.parse(endpoint.data) as Record<string, unknown[]>;
+  const data = parseEndpointData(endpoint.data);
+  if (!data) {
+    return Response.json(
+      { error: "Corrupted endpoint data" },
+      { status: 500, headers: corsHeaders() }
+    );
+  }
 
   if (!(resource in data)) {
     return Response.json(
@@ -65,12 +89,7 @@ export async function PUT(
     );
   }
 
-  const numericId = Number(itemId);
-  const index = data[resource].findIndex((i: unknown) => {
-    const obj = i as Record<string, unknown>;
-    return obj.id === numericId;
-  });
-
+  const index = findItemIndex(data[resource], itemId);
   if (index === -1) {
     return Response.json(
       { error: "Item not found" },
@@ -88,8 +107,15 @@ export async function PUT(
     );
   }
 
+  if (!isPlainObject(body)) {
+    return Response.json(
+      { error: "Request body must be a JSON object" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
+
   const existing = data[resource][index] as Record<string, unknown>;
-  const updated = { ...existing, ...(body as Record<string, unknown>), id: numericId };
+  const updated = { ...existing, ...body, id: existing.id };
   data[resource][index] = updated;
   updateEndpointData(id, JSON.stringify(data));
 
@@ -110,7 +136,13 @@ export async function DELETE(
     );
   }
 
-  const data = JSON.parse(endpoint.data) as Record<string, unknown[]>;
+  const data = parseEndpointData(endpoint.data);
+  if (!data) {
+    return Response.json(
+      { error: "Corrupted endpoint data" },
+      { status: 500, headers: corsHeaders() }
+    );
+  }
 
   if (!(resource in data)) {
     return Response.json(
@@ -119,12 +151,7 @@ export async function DELETE(
     );
   }
 
-  const numericId = Number(itemId);
-  const index = data[resource].findIndex((i: unknown) => {
-    const obj = i as Record<string, unknown>;
-    return obj.id === numericId;
-  });
-
+  const index = findItemIndex(data[resource], itemId);
   if (index === -1) {
     return Response.json(
       { error: "Item not found" },
