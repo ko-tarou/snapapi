@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: Promise<Params> }
 ) {
   const { id, resource } = await params;
-  const endpoint = getEndpoint(id);
+  const endpoint = await getEndpoint(id);
 
   if (!endpoint) {
     return Response.json(
@@ -43,7 +43,7 @@ export async function POST(
   { params }: { params: Promise<Params> }
 ) {
   const { id, resource } = await params;
-  const endpoint = getEndpoint(id);
+  const endpoint = await getEndpoint(id);
 
   if (!endpoint) {
     return Response.json(
@@ -105,7 +105,7 @@ export async function POST(
 
   const newItem = { ...body, id: newId };
   items.push(newItem);
-  updateEndpointData(id, JSON.stringify(data));
+  await updateEndpointData(id, JSON.stringify(data));
 
   return Response.json(newItem, { status: 201, headers: corsHeaders() });
 }

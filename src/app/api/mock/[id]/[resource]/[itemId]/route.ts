@@ -25,7 +25,7 @@ export async function GET(
   { params }: { params: Promise<Params> }
 ) {
   const { id, resource, itemId } = await params;
-  const endpoint = getEndpoint(id);
+  const endpoint = await getEndpoint(id);
 
   if (!endpoint) {
     return Response.json(
@@ -65,7 +65,7 @@ export async function PUT(
   { params }: { params: Promise<Params> }
 ) {
   const { id, resource, itemId } = await params;
-  const endpoint = getEndpoint(id);
+  const endpoint = await getEndpoint(id);
 
   if (!endpoint) {
     return Response.json(
@@ -117,7 +117,7 @@ export async function PUT(
   const existing = data[resource][index] as Record<string, unknown>;
   const updated = { ...existing, ...body, id: existing.id };
   data[resource][index] = updated;
-  updateEndpointData(id, JSON.stringify(data));
+  await updateEndpointData(id, JSON.stringify(data));
 
   return Response.json(updated, { headers: corsHeaders() });
 }
@@ -127,7 +127,7 @@ export async function DELETE(
   { params }: { params: Promise<Params> }
 ) {
   const { id, resource, itemId } = await params;
-  const endpoint = getEndpoint(id);
+  const endpoint = await getEndpoint(id);
 
   if (!endpoint) {
     return Response.json(
@@ -160,7 +160,7 @@ export async function DELETE(
   }
 
   data[resource].splice(index, 1);
-  updateEndpointData(id, JSON.stringify(data));
+  await updateEndpointData(id, JSON.stringify(data));
 
   return Response.json(
     { message: "Item deleted" },

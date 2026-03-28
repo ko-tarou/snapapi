@@ -18,7 +18,7 @@ export default async function DocsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const endpoint = getEndpoint(id);
+  const endpoint = await getEndpoint(id);
   if (!endpoint) notFound();
 
   const data = JSON.parse(endpoint.data) as Record<string, unknown[]>;

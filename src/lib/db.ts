@@ -1,64 +1,88 @@
-import Database from "better-sqlite3";
-import path from "path";
-import fs from "fs";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-const GLOBAL_KEY = "__snapapi_db";
+type D1Database = {
+  prepare(sql: string): D1PreparedStatement;
+  batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
+};
 
-function cleanupExpiredEndpoints(db: Database.Database): void {
-  db.prepare("DELETE FROM endpoints WHERE expires_at IS NOT NULL AND expires_at < datetime('now')").run();
+type D1PreparedStatement = {
+  bind(...values: unknown[]): D1PreparedStatement;
+  run(): Promise<D1Result>;
+  first<T = Record<string, unknown>>(): Promise<T | null>;
+  all<T = Record<string, unknown>>(): Promise<D1Result<T>>;
+};
+
+type D1Result<T = unknown> = {
+  results: T[];
+  success: boolean;
+  meta: Record<string, unknown>;
+};
+
+export async function getDb(): Promise<D1Database> {
+  const { env } = await getCloudflareContext();
+  return (env as Record<string, unknown>).DB as D1Database;
 }
 
-export function getDb(): Database.Database {
-  const cached = (globalThis as Record<string, unknown>)[GLOBAL_KEY] as Database.Database | undefined;
-  if (cached) return cached;
-
-  const dataDir = path.join(process.cwd(), "data");
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-
-  const dbPath = path.join(dataDir, "snapapi.db");
-  const db = new Database(dbPath);
-  db.pragma("journal_mode = WAL");
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS endpoints (
-      id TEXT PRIMARY KEY,
-      data TEXT NOT NULL,
-      created_at TEXT DEFAULT (datetime('now')),
-      expires_at TEXT
+export async function initDb(): Promise<void> {
+  const db = await getDb();
+  await db
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS endpoints (
+        id TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now')),
+        expires_at TEXT
+      )`
     )
-  `);
-
-  cleanupExpiredEndpoints(db);
-  (globalThis as Record<string, unknown>)[GLOBAL_KEY] = db;
-
-  return db;
+    .run();
 }
 
-export function createEndpoint(id: string, data: string): void {
-  const stmt = getDb().prepare(
-    "INSERT INTO endpoints (id, data, expires_at) VALUES (?, ?, datetime('now', '+24 hours'))"
-  );
-  stmt.run(id, data);
+export async function cleanupExpiredEndpoints(): Promise<void> {
+  const db = await getDb();
+  await db
+    .prepare(
+      "DELETE FROM endpoints WHERE expires_at IS NOT NULL AND expires_at < datetime('now')"
+    )
+    .run();
 }
 
-export function getEndpoint(
+export async function createEndpoint(id: string, data: string): Promise<void> {
+  const db = await getDb();
+  await db
+    .prepare(
+      "INSERT INTO endpoints (id, data, expires_at) VALUES (?, ?, datetime('now', '+24 hours'))"
+    )
+    .bind(id, data)
+    .run();
+}
+
+export async function getEndpoint(
   id: string
-): { id: string; data: string; created_at: string; expires_at: string | null } | undefined {
-  const stmt = getDb().prepare("SELECT * FROM endpoints WHERE id = ?");
-  return stmt.get(id) as
-    | { id: string; data: string; created_at: string; expires_at: string | null }
-    | undefined;
+): Promise<{
+  id: string;
+  data: string;
+  created_at: string;
+  expires_at: string | null;
+} | null> {
+  const db = await getDb();
+  return db
+    .prepare("SELECT * FROM endpoints WHERE id = ?")
+    .bind(id)
+    .first<{
+      id: string;
+      data: string;
+      created_at: string;
+      expires_at: string | null;
+    }>();
 }
 
-export function updateEndpointData(id: string, data: string): void {
-  const stmt = getDb().prepare("UPDATE endpoints SET data = ? WHERE id = ?");
-  stmt.run(data, id);
-}
-
-export function withTransaction<T>(fn: () => T): T {
-  const db = getDb();
-  const transaction = db.transaction(fn);
-  return transaction();
+export async function updateEndpointData(
+  id: string,
+  data: string
+): Promise<void> {
+  const db = await getDb();
+  await db
+    .prepare("UPDATE endpoints SET data = ? WHERE id = ?")
+    .bind(data, id)
+    .run();
 }

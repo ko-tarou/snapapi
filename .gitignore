@@ -44,3 +44,7 @@ next-env.d.ts
 *.sqlite
 *.db
 /data/
+
+# cloudflare
+.open-next/
+.wrangler/

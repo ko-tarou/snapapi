@@ -1,0 +1,13 @@
+{
+  "name": "snapapi",
+  "compatibility_date": "2025-03-28",
+  "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": ".open-next/cloudflare",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "snapapi-db",
+      "database_id": "4eb9181d-5e9c-4413-a6ba-c05f59373e73"
+    }
+  ]
+}

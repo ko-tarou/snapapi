@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
     const id = uuidv4();
     const endpoints = Object.keys(result.data);
-    createEndpoint(id, JSON.stringify(result.data));
+    await createEndpoint(id, JSON.stringify(result.data));
 
     return Response.json(
       { id, endpoints, url: `/api/mock/${id}` },
