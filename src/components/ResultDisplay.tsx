@@ -72,12 +72,22 @@ export default function ResultDisplay({ id, endpoints, baseUrl, config }: Result
         })}
       </div>
 
-      <Link
-        href={`/docs/${id}`}
-        className="mt-4 inline-block text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
-      >
-        View API Docs &rarr;
-      </Link>
+      <div className="mt-4 flex items-center gap-4">
+        <Link
+          href={`/docs/${id}`}
+          className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+        >
+          View API Docs &rarr;
+        </Link>
+        <a
+          href={`/api/mock/${id}/openapi`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-gray-400 hover:text-gray-300 transition-colors"
+        >
+          OpenAPI Spec &darr;
+        </a>
+      </div>
     </div>
   );
 }

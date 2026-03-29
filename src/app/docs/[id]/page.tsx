@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { getEndpoint } from "@/lib/db";
 import CopyButton from "@/components/CopyButton";
+import DownloadButton from "@/components/DownloadButton";
 
 const METHOD_COLORS: Record<string, string> = {
   GET: "bg-emerald-900/60 text-emerald-300",
@@ -46,11 +47,15 @@ export default async function DocsPage({
           Endpoint ID: <code className="text-gray-300">{id}</code>
         </p>
 
-        {/* Base URL */}
-        <div className="mt-6 flex items-center rounded-lg bg-gray-900 px-4 py-3 border border-gray-800">
+        {/* Base URL & OpenAPI Download */}
+        <div className="mt-6 flex items-center gap-3 rounded-lg bg-gray-900 px-4 py-3 border border-gray-800">
           <code className="min-w-0 flex-1 truncate text-sm text-gray-200">
             {baseUrl}
           </code>
+          <DownloadButton
+            url={`${baseUrl}/openapi`}
+            filename={`openapi-${id}.json`}
+          />
           <CopyButton text={baseUrl} label="Copy URL" />
         </div>
 
