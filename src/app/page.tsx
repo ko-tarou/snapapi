@@ -184,6 +184,14 @@ export default function Home() {
           <Link href="/tools/json-validator" className="text-emerald-400 hover:underline">
             JSON Validator
           </Link>
+          {" | "}
+          <Link href="/tools/json-to-typescript" className="text-emerald-400 hover:underline">
+            JSON to TypeScript
+          </Link>
+          {" | "}
+          <Link href="/tools/fake-data-generator" className="text-emerald-400 hover:underline">
+            Fake Data Generator
+          </Link>
         </div>
         SnapAPI &middot; {new Date().getFullYear()}
       </footer>

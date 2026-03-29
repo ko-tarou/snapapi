@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Free Developer Tools - JSON Formatter, Validator | SnapAPI",
+  title: "Free Developer Tools - JSON, TypeScript, Mock Data | SnapAPI",
   description:
-    "Free online developer tools: JSON Formatter, JSON Validator. No signup required.",
+    "Free online developer tools: JSON Formatter, JSON Validator, JSON to TypeScript, Fake Data Generator. No signup required.",
   alternates: {
     canonical: "https://snapapi.akokoa1221.workers.dev/tools",
   },
@@ -20,6 +20,16 @@ const TOOLS = [
     title: "JSON Validator",
     desc: "Validate JSON syntax",
     href: "/tools/json-validator",
+  },
+  {
+    title: "JSON to TypeScript",
+    desc: "Convert JSON to TypeScript interfaces",
+    href: "/tools/json-to-typescript",
+  },
+  {
+    title: "Fake Data Generator",
+    desc: "Generate realistic fake data for testing",
+    href: "/tools/fake-data-generator",
   },
 ];
 
