@@ -21,8 +21,16 @@ export default async function DocsPage({
   const endpoint = await getEndpoint(id);
   if (!endpoint) notFound();
 
-  const data = JSON.parse(endpoint.data) as Record<string, unknown[]>;
-  const resources = Object.keys(data);
+  const data = JSON.parse(endpoint.data) as Record<string, unknown>;
+  const rawConfig = data._config as Record<string, unknown> | undefined;
+  const simConfig = rawConfig
+    ? {
+        delay: Number(rawConfig.delay) || 0,
+        errorRate: Number(rawConfig.errorRate) || 0,
+        errorStatus: Number(rawConfig.errorStatus) || 500,
+      }
+    : null;
+  const resources = Object.keys(data).filter((k) => k !== "_config");
   const h = await headers();
   const host = h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? "http";
@@ -46,10 +54,37 @@ export default async function DocsPage({
           <CopyButton text={baseUrl} label="Copy URL" />
         </div>
 
+        {/* Simulation Config */}
+        {simConfig && (simConfig.delay > 0 || simConfig.errorRate > 0) && (
+          <section className="mt-6 rounded-lg border border-gray-800 bg-gray-900 p-5">
+            <h2 className="text-lg font-semibold mb-3">Simulation Settings</h2>
+            <div className="space-y-2 text-sm text-gray-300">
+              {simConfig.delay > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Delay</span>
+                  <span>{simConfig.delay}ms</span>
+                </div>
+              )}
+              {simConfig.errorRate > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Error Rate</span>
+                  <span>{Math.round(simConfig.errorRate * 100)}%</span>
+                </div>
+              )}
+              {simConfig.errorRate > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Error Status</span>
+                  <span>{simConfig.errorStatus}</span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Resources */}
         <div className="mt-8 space-y-6">
           {resources.map((res) => {
-            const items = data[res];
+            const items = data[res] as unknown[];
             const url = `${baseUrl}/${res}`;
             const curl = `curl ${url}`;
             const preview = JSON.stringify(items[0] ?? {}, null, 2);

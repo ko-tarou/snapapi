@@ -3,15 +3,22 @@
 import Link from "next/link";
 import CopyButton from "./CopyButton";
 
+interface SimConfig {
+  delay?: number;
+  errorRate?: number;
+  errorStatus?: number;
+}
+
 interface ResultDisplayProps {
   id: string;
   endpoints: string[];
   baseUrl: string;
+  config?: SimConfig;
 }
 
 const METHODS = ["GET", "POST", "PUT", "DELETE"] as const;
 
-export default function ResultDisplay({ id, endpoints, baseUrl }: ResultDisplayProps) {
+export default function ResultDisplay({ id, endpoints, baseUrl, config }: ResultDisplayProps) {
   const apiBase = `${baseUrl}/api/mock/${id}`;
 
   return (
@@ -26,6 +33,17 @@ export default function ResultDisplay({ id, endpoints, baseUrl }: ResultDisplayP
         </code>
         <CopyButton text={apiBase} label="Copy URL" />
       </div>
+
+      {config && (config.delay || config.errorRate) ? (
+        <div className="mb-4 rounded bg-gray-800 px-3 py-2 text-sm text-gray-300">
+          <span className="font-medium text-emerald-400">Simulation:</span>{" "}
+          {config.delay ? `${config.delay}ms delay` : ""}
+          {config.delay && config.errorRate ? ", " : ""}
+          {config.errorRate
+            ? `${Math.round(config.errorRate * 100)}% error rate (${config.errorStatus ?? 500})`
+            : ""}
+        </div>
+      ) : null}
 
       <div className="space-y-3">
         {endpoints.map((ep) => {

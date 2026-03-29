@@ -14,10 +14,17 @@ const SAMPLE_JSON = `{
   ]
 }`;
 
+interface SimConfig {
+  delay?: number;
+  errorRate?: number;
+  errorStatus?: number;
+}
+
 interface ApiResult {
   id: string;
   endpoints: string[];
   url: string;
+  config?: SimConfig;
 }
 
 export default function DropZone() {
@@ -26,6 +33,10 @@ export default function DropZone() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ApiResult | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [delay, setDelay] = useState(0);
+  const [errorRate, setErrorRate] = useState(0);
+  const [errorStatus, setErrorStatus] = useState(500);
 
   const handleDragOver = useCallback((e: DragEvent) => {
     e.preventDefault();
@@ -53,10 +64,24 @@ export default function DropZone() {
     }
     setLoading(true);
     try {
+      let bodyToSend = json;
+      if (delay > 0 || errorRate > 0) {
+        try {
+          const parsed = JSON.parse(json);
+          parsed._config = {
+            delay,
+            errorRate: errorRate / 100,
+            errorStatus,
+          };
+          bodyToSend = JSON.stringify(parsed);
+        } catch {
+          // Let the server handle parse errors
+        }
+      }
       const res = await fetch("/api/mock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: json,
+        body: bodyToSend,
       });
       const data = await res.json();
       if (!res.ok) {
@@ -115,6 +140,64 @@ export default function DropZone() {
         </button>
       </div>
 
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="text-sm text-gray-400 hover:text-gray-200 transition-colors"
+        >
+          {showAdvanced ? "Hide" : "Show"} Advanced Settings
+        </button>
+        {showAdvanced && (
+          <div className="mt-3 rounded-lg border border-gray-700 bg-gray-900 p-4 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1">
+                Delay (ms)
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={5000}
+                step={100}
+                value={delay}
+                onChange={(e) => setDelay(Math.min(5000, Math.max(0, Number(e.target.value) || 0)))}
+                className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-emerald-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1">
+                Error Rate (%)
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={errorRate}
+                onChange={(e) => setErrorRate(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
+                className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-emerald-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1">
+                Error Status Code
+              </label>
+              <select
+                value={errorStatus}
+                onChange={(e) => setErrorStatus(Number(e.target.value))}
+                className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-emerald-600"
+              >
+                <option value={500}>500 Internal Server Error</option>
+                <option value={503}>503 Service Unavailable</option>
+                <option value={429}>429 Too Many Requests</option>
+                <option value={400}>400 Bad Request</option>
+                <option value={404}>404 Not Found</option>
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
+
       {error && (
         <p className="mt-3 text-sm text-red-400">{error}</p>
       )}
@@ -124,6 +207,7 @@ export default function DropZone() {
           id={result.id}
           endpoints={result.endpoints}
           baseUrl={typeof window !== "undefined" ? window.location.origin : ""}
+          config={result.config}
         />
       )}
     </div>
