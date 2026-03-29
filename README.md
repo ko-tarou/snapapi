@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SnapAPI
 
-## Getting Started
+**Drop your JSON, get a REST API in 5 seconds.**
 
-First, run the development server:
+No signup. No credit card. Free forever.
+
+[snapapi.akokoa1221.workers.dev](https://snapapi.akokoa1221.workers.dev)
+
+## Features
+
+- Instant REST API from JSON
+- Full CRUD (GET, POST, PUT, DELETE)
+- CORS enabled for all origins
+- Auto-generate realistic mock data from schema
+- Simulate response delays (0-5000ms)
+- Random error injection for resilience testing
+- Auto-generated API documentation
+- 24-hour endpoint expiration
+- Rate limiting for fair usage
+
+## Quick Start
+
+### 1. Web UI
+
+Visit [snapapi.akokoa1221.workers.dev](https://snapapi.akokoa1221.workers.dev) and drop your JSON.
+
+### 2. cURL
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Create a mock API
+curl -X POST https://snapapi.akokoa1221.workers.dev/api/mock \
+  -H "Content-Type: application/json" \
+  -d '{"users":[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]}'
+
+# Response: {"id":"abc-123","endpoints":["users"],"url":"/api/mock/abc-123"}
+
+# Use your API
+curl https://snapapi.akokoa1221.workers.dev/api/mock/abc-123/users
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Auto-Generate Data
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+curl -X POST https://snapapi.akokoa1221.workers.dev/api/mock \
+  -H "Content-Type: application/json" \
+  -d '{
+    "_generate": {
+      "users": {
+        "count": 10,
+        "schema": {
+          "id": "autoincrement",
+          "name": "name",
+          "email": "email",
+          "age": "number:18-65"
+        }
+      }
+    }
+  }'
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Supported types: `autoincrement`, `name`, `email`, `number:min-max`, `boolean`, `text:sentence|paragraph|title|word`, `url`, `url:image`, `date:past|future`, `uuid`
 
-## Learn More
+## Simulation
 
-To learn more about Next.js, take a look at the following resources:
+Simulate delays and random errors for resilience testing:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+curl -X POST https://snapapi.akokoa1221.workers.dev/api/mock \
+  -H "Content-Type: application/json" \
+  -d '{
+    "_config": {"delay": 1000, "errorRate": 0.3, "errorStatus": 503},
+    "items": [{"id": 1, "name": "Test"}]
+  }'
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech Stack
 
-## Deploy on Vercel
+- Next.js 16 (App Router)
+- Cloudflare Pages + D1 (SQLite at edge)
+- TypeScript + Tailwind CSS
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
+
+## Author
+
+Built with [Claude Code](https://claude.ai/code)
