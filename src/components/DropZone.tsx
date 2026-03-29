@@ -14,6 +14,31 @@ const SAMPLE_JSON = `{
   ]
 }`;
 
+const GENERATE_JSON = JSON.stringify({
+  _generate: {
+    users: {
+      count: 5,
+      schema: {
+        id: "autoincrement",
+        name: "name",
+        email: "email",
+        age: "number:18-65",
+        active: "boolean",
+      },
+    },
+    posts: {
+      count: 10,
+      schema: {
+        id: "autoincrement",
+        title: "text:title",
+        body: "text:paragraph",
+        userId: "number:1-5",
+        createdAt: "date:past",
+      },
+    },
+  },
+}, null, 2);
+
 interface SimConfig {
   delay?: number;
   errorRate?: number;
@@ -137,6 +162,16 @@ export default function DropZone() {
           className="rounded-lg border border-gray-600 px-5 py-2.5 text-sm text-gray-300 transition-colors hover:border-gray-500 hover:text-white"
         >
           Try with example
+        </button>
+        <button
+          onClick={() => {
+            setJson(GENERATE_JSON);
+            setError("");
+            setResult(null);
+          }}
+          className="rounded-lg border border-gray-600 px-5 py-2.5 text-sm text-gray-300 transition-colors hover:border-gray-500 hover:text-white"
+        >
+          Generate sample data
         </button>
       </div>
 
