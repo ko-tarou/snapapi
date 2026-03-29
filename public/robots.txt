@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://snapapi.akokoa1221.workers.dev/sitemap.xml

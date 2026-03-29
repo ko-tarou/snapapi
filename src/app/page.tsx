@@ -92,7 +92,27 @@ const STEPS = [
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center bg-gray-950 text-white">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "SnapAPI",
+            "url": "https://snapapi.akokoa1221.workers.dev",
+            "description": "Create instant mock REST APIs from JSON in 5 seconds",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Any",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })
+        }}
+      />
+      <main className="flex min-h-screen flex-col items-center bg-gray-950 text-white">
       {/* Hero */}
       <section className="flex w-full max-w-3xl flex-col items-center px-4 pt-20 pb-12 text-center">
         <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl">
@@ -157,5 +177,6 @@ export default function Home() {
         SnapAPI &middot; {new Date().getFullYear()}
       </footer>
     </main>
+    </>
   );
 }
