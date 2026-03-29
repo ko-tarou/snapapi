@@ -1,3 +1,8 @@
+import {
+  generateFromSchema,
+  type GenerateConfig,
+} from "./generate";
+
 export type ParseResult =
   | { success: true; data: Record<string, unknown[]> }
   | { success: false; error: string };
@@ -25,13 +30,24 @@ export function parseAndValidateJSON(input: string): ParseResult {
 
   const record = parsed as Record<string, unknown>;
   const dangerousKeys = new Set(["__proto__", "constructor", "prototype"]);
-  const reservedKeys = new Set(["_config"]);
+  const reservedKeys = new Set(["_config", "_generate"]);
   const result: Record<string, unknown[]> = {};
+
+  // Handle _generate: produce data from schema definitions
+  if (record._generate && typeof record._generate === "object" && !Array.isArray(record._generate)) {
+    const generated = generateFromSchema(record._generate as GenerateConfig);
+    for (const [key, items] of Object.entries(generated)) {
+      if (dangerousKeys.has(key)) continue;
+      result[key] = items;
+    }
+  }
 
   for (const key of Object.keys(record)) {
     if (dangerousKeys.has(key)) continue;
     if (reservedKeys.has(key)) continue;
     const value = record[key];
+    // If _generate already created this resource, skip the manual entry
+    if (result[key]) continue;
     result[key] = Array.isArray(value) ? value : [value];
   }
 
