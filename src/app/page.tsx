@@ -1,4 +1,5 @@
 import DropZone from "@/components/DropZone";
+import Link from "next/link";
 
 const FEATURES = [
   {
@@ -174,6 +175,16 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="w-full border-t border-gray-800 py-6 text-center text-sm text-gray-500">
+        <div className="mb-2">
+          Free Tools:{" "}
+          <Link href="/tools/json-formatter" className="text-emerald-400 hover:underline">
+            JSON Formatter
+          </Link>
+          {" | "}
+          <Link href="/tools/json-validator" className="text-emerald-400 hover:underline">
+            JSON Validator
+          </Link>
+        </div>
         SnapAPI &middot; {new Date().getFullYear()}
       </footer>
     </main>
