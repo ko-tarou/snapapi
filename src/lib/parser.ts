@@ -25,10 +25,12 @@ export function parseAndValidateJSON(input: string): ParseResult {
 
   const record = parsed as Record<string, unknown>;
   const dangerousKeys = new Set(["__proto__", "constructor", "prototype"]);
+  const reservedKeys = new Set(["_config"]);
   const result: Record<string, unknown[]> = {};
 
   for (const key of Object.keys(record)) {
     if (dangerousKeys.has(key)) continue;
+    if (reservedKeys.has(key)) continue;
     const value = record[key];
     result[key] = Array.isArray(value) ? value : [value];
   }
