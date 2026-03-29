@@ -1,6 +1,7 @@
 import { getEndpoint, updateEndpointData } from "@/lib/db";
 import { corsHeaders } from "@/lib/cors";
 import { isPlainObject } from "@/lib/validate";
+import { getConfig, applyDelay, shouldError } from "@/lib/simulate";
 
 function findItemIndex(items: unknown[], itemId: string): number {
   const numericId = Number(itemId);
@@ -49,6 +50,15 @@ export async function GET(
     );
   }
 
+  const config = getConfig(data as Record<string, unknown>);
+  await applyDelay(config);
+  if (shouldError(config)) {
+    return Response.json(
+      { error: "Simulated error" },
+      { status: config.errorStatus ?? 500, headers: corsHeaders() }
+    );
+  }
+
   const index = findItemIndex(data[resource], itemId);
   if (index === -1) {
     return Response.json(
@@ -86,6 +96,15 @@ export async function PUT(
     return Response.json(
       { error: `Resource '${resource}' not found` },
       { status: 404, headers: corsHeaders() }
+    );
+  }
+
+  const putConfig = getConfig(data as Record<string, unknown>);
+  await applyDelay(putConfig);
+  if (shouldError(putConfig)) {
+    return Response.json(
+      { error: "Simulated error" },
+      { status: putConfig.errorStatus ?? 500, headers: corsHeaders() }
     );
   }
 
@@ -148,6 +167,15 @@ export async function DELETE(
     return Response.json(
       { error: `Resource '${resource}' not found` },
       { status: 404, headers: corsHeaders() }
+    );
+  }
+
+  const delConfig = getConfig(data as Record<string, unknown>);
+  await applyDelay(delConfig);
+  if (shouldError(delConfig)) {
+    return Response.json(
+      { error: "Simulated error" },
+      { status: delConfig.errorStatus ?? 500, headers: corsHeaders() }
     );
   }
 

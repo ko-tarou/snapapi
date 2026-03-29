@@ -1,6 +1,7 @@
 import { getEndpoint, updateEndpointData } from "@/lib/db";
 import { corsHeaders } from "@/lib/cors";
 import { isPlainObject } from "@/lib/validate";
+import { getConfig, applyDelay, shouldError } from "@/lib/simulate";
 
 type Params = { id: string; resource: string };
 
@@ -35,6 +36,15 @@ export async function GET(
     );
   }
 
+  const config = getConfig(data);
+  await applyDelay(config);
+  if (shouldError(config)) {
+    return Response.json(
+      { error: "Simulated error" },
+      { status: config.errorStatus ?? 500, headers: corsHeaders() }
+    );
+  }
+
   return Response.json(data[resource], { headers: corsHeaders() });
 }
 
@@ -66,6 +76,15 @@ export async function POST(
     return Response.json(
       { error: `Resource '${resource}' not found` },
       { status: 404, headers: corsHeaders() }
+    );
+  }
+
+  const config = getConfig(data);
+  await applyDelay(config);
+  if (shouldError(config)) {
+    return Response.json(
+      { error: "Simulated error" },
+      { status: config.errorStatus ?? 500, headers: corsHeaders() }
     );
   }
 

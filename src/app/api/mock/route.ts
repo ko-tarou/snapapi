@@ -3,6 +3,7 @@ import { parseAndValidateJSON } from "@/lib/parser";
 import { createEndpoint } from "@/lib/db";
 import { corsHeaders } from "@/lib/cors";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { getConfig, type SimConfig } from "@/lib/simulate";
 
 export async function POST(request: Request) {
   try {
@@ -22,6 +23,16 @@ export async function POST(request: Request) {
     }
 
     const body = await request.text();
+
+    // Extract _config before parsing (parser excludes it)
+    let simConfig: SimConfig = {};
+    try {
+      const raw = JSON.parse(body) as Record<string, unknown>;
+      simConfig = getConfig(raw);
+    } catch {
+      // parseAndValidateJSON will handle the error
+    }
+
     const result = parseAndValidateJSON(body);
 
     if (!result.success) {
@@ -33,12 +44,25 @@ export async function POST(request: Request) {
 
     const id = uuidv4();
     const endpoints = Object.keys(result.data);
-    await createEndpoint(id, JSON.stringify(result.data));
 
-    return Response.json(
-      { id, endpoints, url: `/api/mock/${id}` },
-      { status: 201, headers: corsHeaders() }
-    );
+    // Store _config alongside resource data
+    const storeData: Record<string, unknown> = { ...result.data };
+    const hasConfig = simConfig.delay || simConfig.errorRate;
+    if (hasConfig) {
+      storeData._config = simConfig;
+    }
+    await createEndpoint(id, JSON.stringify(storeData));
+
+    const response: Record<string, unknown> = {
+      id,
+      endpoints,
+      url: `/api/mock/${id}`,
+    };
+    if (hasConfig) {
+      response.config = simConfig;
+    }
+
+    return Response.json(response, { status: 201, headers: corsHeaders() });
   } catch {
     return Response.json({ error: "Internal server error" }, {
       status: 500,
