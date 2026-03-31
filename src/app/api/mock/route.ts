@@ -7,6 +7,9 @@ import { getConfig, type SimConfig } from "@/lib/simulate";
 
 export async function POST(request: Request) {
   try {
+    const origin = request.headers.get("x-forwarded-proto")
+      ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get("host")}`
+      : new URL(request.url).origin;
     const ip = request.headers.get("x-forwarded-for") || "unknown";
     const rateCheck = checkRateLimit(ip);
     if (!rateCheck.allowed) {
@@ -56,7 +59,7 @@ export async function POST(request: Request) {
     const response: Record<string, unknown> = {
       id,
       endpoints,
-      url: `/api/mock/${id}`,
+      url: `${origin}/api/mock/${id}`,
     };
     if (hasConfig) {
       response.config = simConfig;
