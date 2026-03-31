@@ -25,16 +25,26 @@ export async function getDb(): Promise<D1Database> {
 
 export async function initDb(): Promise<void> {
   const db = await getDb();
-  await db
-    .prepare(
+  await db.batch([
+    db.prepare(
       `CREATE TABLE IF NOT EXISTS endpoints (
         id TEXT PRIMARY KEY,
         data TEXT NOT NULL,
         created_at TEXT DEFAULT (datetime('now')),
         expires_at TEXT
       )`
-    )
-    .run();
+    ),
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS webhook_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        endpoint_id TEXT NOT NULL,
+        method TEXT NOT NULL,
+        headers TEXT NOT NULL,
+        body TEXT NOT NULL,
+        received_at TEXT DEFAULT (datetime('now'))
+      )`
+    ),
+  ]);
 }
 
 export async function cleanupExpiredEndpoints(): Promise<void> {
@@ -84,5 +94,59 @@ export async function updateEndpointData(
   await db
     .prepare("UPDATE endpoints SET data = ? WHERE id = ?")
     .bind(data, id)
+    .run();
+}
+
+export async function addWebhookLog(
+  endpointId: string,
+  method: string,
+  headers: string,
+  body: string
+): Promise<void> {
+  const db = await getDb();
+  await db
+    .prepare(
+      "INSERT INTO webhook_logs (endpoint_id, method, headers, body) VALUES (?, ?, ?, ?)"
+    )
+    .bind(endpointId, method, headers, body)
+    .run();
+}
+
+export async function getWebhookLogs(
+  endpointId: string
+): Promise<
+  {
+    id: number;
+    endpoint_id: string;
+    method: string;
+    headers: string;
+    body: string;
+    received_at: string;
+  }[]
+> {
+  const db = await getDb();
+  const result = await db
+    .prepare(
+      "SELECT * FROM webhook_logs WHERE endpoint_id = ? ORDER BY id DESC LIMIT 50"
+    )
+    .bind(endpointId)
+    .all<{
+      id: number;
+      endpoint_id: string;
+      method: string;
+      headers: string;
+      body: string;
+      received_at: string;
+    }>();
+  return result.results;
+}
+
+export async function clearWebhookLogs(
+  endpointId: string
+): Promise<void> {
+  const db = await getDb();
+  await db
+    .prepare("DELETE FROM webhook_logs WHERE endpoint_id = ?")
+    .bind(endpointId)
     .run();
 }
