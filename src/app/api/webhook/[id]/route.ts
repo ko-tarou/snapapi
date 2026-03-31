@@ -2,11 +2,15 @@ import { initDb, getEndpoint, addWebhookLog, getWebhookLogs } from "@/lib/db";
 import { corsHeaders } from "@/lib/cors";
 
 const ALLOWED_HEADER_PREFIXES = ["content-type", "user-agent", "x-"];
+const BLOCKED_HEADER_PREFIXES = [
+  "x-forwarded-", "x-real-ip", "x-vercel-", "x-open-next-", "x-opennext-",
+];
 
 function filterHeaders(reqHeaders: Headers): Record<string, string> {
   const filtered: Record<string, string> = {};
   reqHeaders.forEach((value, key) => {
     const lower = key.toLowerCase();
+    if (BLOCKED_HEADER_PREFIXES.some((b) => lower.startsWith(b))) return;
     if (
       ALLOWED_HEADER_PREFIXES.some((prefix) =>
         lower === prefix || lower.startsWith(prefix)
