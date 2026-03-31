@@ -13,13 +13,15 @@ interface ResultDisplayProps {
   id: string;
   endpoints: string[];
   baseUrl: string;
+  webhookUrl?: string;
   config?: SimConfig;
 }
 
 const METHODS = ["GET", "POST", "PUT", "DELETE"] as const;
 
-export default function ResultDisplay({ id, endpoints, baseUrl, config }: ResultDisplayProps) {
+export default function ResultDisplay({ id, endpoints, baseUrl, webhookUrl, config }: ResultDisplayProps) {
   const apiBase = `${baseUrl}/api/mock/${id}`;
+  const whUrl = webhookUrl ?? `${baseUrl}/api/webhook/${id}`;
 
   return (
     <div className="mt-6 w-full rounded-lg border border-emerald-800 bg-gray-900 p-4">
@@ -70,6 +72,28 @@ export default function ResultDisplay({ id, endpoints, baseUrl, config }: Result
             </div>
           );
         })}
+      </div>
+
+      {/* Webhook URL */}
+      <div className="mt-4 rounded bg-gray-800 p-3">
+        <h4 className="mb-2 text-xs font-semibold uppercase text-gray-500">
+          Webhook URL
+        </h4>
+        <div className="flex items-center">
+          <code className="min-w-0 flex-1 truncate text-sm text-gray-200">
+            {whUrl}
+          </code>
+          <CopyButton text={whUrl} label="Copy" />
+        </div>
+        <p className="mt-1.5 text-xs text-gray-500">
+          POST to this URL to capture incoming webhook requests.{" "}
+          <Link
+            href={`/docs/${id}#webhooks`}
+            className="text-emerald-400 hover:text-emerald-300"
+          >
+            View webhook logs &rarr;
+          </Link>
+        </p>
       </div>
 
       <div className="mt-4 flex items-center gap-4">

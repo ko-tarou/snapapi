@@ -60,6 +60,7 @@ export async function POST(request: Request) {
       id,
       endpoints,
       url: `${origin}/api/mock/${id}`,
+      webhookUrl: `${origin}/api/webhook/${id}`,
     };
     if (hasConfig) {
       response.config = simConfig;

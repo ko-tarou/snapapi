@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { getEndpoint } from "@/lib/db";
 import CopyButton from "@/components/CopyButton";
 import DownloadButton from "@/components/DownloadButton";
+import WebhookLogs from "@/components/WebhookLogs";
 
 const METHOD_COLORS: Record<string, string> = {
   GET: "bg-emerald-900/60 text-emerald-300",
@@ -36,6 +37,7 @@ export default async function DocsPage({
   const host = h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? "http";
   const baseUrl = `${proto}://${host}/api/mock/${id}`;
+  const webhookUrl = `${proto}://${host}/api/webhook/${id}`;
 
   return (
     <main className="min-h-screen bg-gray-950 text-white">
@@ -130,6 +132,11 @@ export default async function DocsPage({
               </section>
             );
           })}
+        </div>
+
+        {/* Webhooks */}
+        <div className="mt-8">
+          <WebhookLogs endpointId={id} webhookUrl={webhookUrl} />
         </div>
       </div>
     </main>

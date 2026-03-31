@@ -49,6 +49,7 @@ interface ApiResult {
   id: string;
   endpoints: string[];
   url: string;
+  webhookUrl?: string;
   config?: SimConfig;
 }
 
@@ -242,6 +243,7 @@ export default function DropZone() {
           id={result.id}
           endpoints={result.endpoints}
           baseUrl={typeof window !== "undefined" ? window.location.origin : ""}
+          webhookUrl={result.webhookUrl}
           config={result.config}
         />
       )}
