@@ -6,6 +6,14 @@ No signup. No credit card. Free forever.
 
 [snapapi.akokoa1221.workers.dev](https://snapapi.akokoa1221.workers.dev)
 
+## CLI
+
+```bash
+npx snapapi-cli create '{"users":[{"id":1,"name":"Alice"}]}'
+```
+
+See [snapapi-cli](https://github.com/ko-tarou/snapapi-cli) for more options.
+
 ## Features
 
 - Instant REST API from JSON
